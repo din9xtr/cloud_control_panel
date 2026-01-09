@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloud
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/var/www
+      - ./db:/var/db
+      - ./php/php.ini:/usr/local/etc/php/conf.d/uploads.ini
+    env_file:
+      - .env
