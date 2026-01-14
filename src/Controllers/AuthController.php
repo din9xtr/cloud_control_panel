@@ -22,7 +22,6 @@ final readonly class AuthController
 
     public function loginForm(): string
     {
-        $this->logger->info("Login form started");
         $error = $_SESSION['login_error'] ?? null;
         unset($_SESSION['login_error']);
 

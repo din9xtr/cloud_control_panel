@@ -37,9 +37,16 @@ final class AuthMiddleware implements MiddlewareInterface
         RequestHandlerInterface $handler
     ): ResponseInterface
     {
-        $this->logger->debug('getClientIp: ' . getClientIp());
-
+        $clientIp = getClientIp();
         $path = $request->getUri()->getPath();
+        $method = $request->getMethod();
+
+        if ($clientIp !== '::1') { //todo trusted proxy
+            $this->logger->debug(
+                sprintf('Request: %s %s from IP: %s', $method, $path, $clientIp)
+            );
+        }
+
 
         $token = $request->getCookieParams()['auth_token'] ?? null;
         $session = null;
