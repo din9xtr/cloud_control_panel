@@ -11,17 +11,17 @@ services:
       - .:/var/www
       - ./db:/var/db
       - ./php/php.ini:/usr/local/etc/php/conf.d/uploads.ini
-        - ./Caddyfile:/etc/frankenphp/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+      - ./Caddyfile:/etc/frankenphp/Caddyfile
+#      - caddy_data:/data
+#      - caddy_config:/config
     env_file:
       - .env
     tty: false
     healthcheck:
-      test: [ "CMD", "curl", "-kf", "https://localhost/" ]
+      test: [ "CMD", "curl", "-kf", "http://localhost/" ]
       interval: 30s
       timeout: 10s
       retries: 3
-volumes:
-  caddy_data:
-  caddy_config:
+#volumes:
+#  caddy_data:
+#  caddy_config:

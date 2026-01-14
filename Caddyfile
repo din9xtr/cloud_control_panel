@@ -1,3 +1,6 @@
+{
+    auto_https off
+}
 :80 {
     root * /var/www/public
     php_server {
