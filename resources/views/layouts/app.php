@@ -17,7 +17,7 @@ $page = $viewModel->page;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
-    <link rel="stylesheet" href=/assets/cloud.css>
+    <link rel="stylesheet" href="/assets/cloud.css">
 </head>
 <body>
 

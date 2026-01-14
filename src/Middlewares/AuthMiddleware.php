@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Log\LoggerInterface;
 
 final class AuthMiddleware implements MiddlewareInterface
 {
@@ -26,6 +27,7 @@ final class AuthMiddleware implements MiddlewareInterface
     public function __construct(
         private readonly SessionRepository $sessions,
         private readonly UserRepository    $users,
+        private readonly LoggerInterface   $logger,
     )
     {
     }
@@ -35,6 +37,8 @@ final class AuthMiddleware implements MiddlewareInterface
         RequestHandlerInterface $handler
     ): ResponseInterface
     {
+        $this->logger->debug('getClientIp: ' . getClientIp());
+
         $path = $request->getUri()->getPath();
 
         $token = $request->getCookieParams()['auth_token'] ?? null;

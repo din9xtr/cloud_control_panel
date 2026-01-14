@@ -20,9 +20,8 @@ final class ThrottleMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $ip = $request->getHeaderLine('X-Forwarded-For') ?: $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
-        $ip = explode(',', $ip)[0];
-
+        $ip = getClientIp();
+        
         $stmt = $this->db->prepare("SELECT * FROM login_throttle WHERE ip = :ip ORDER BY id DESC LIMIT 1");
         $stmt->execute(['ip' => $ip]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

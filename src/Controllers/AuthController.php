@@ -40,7 +40,7 @@ final readonly class AuthController
         $username = (string)($data['username'] ?? '');
         $password = (string)($data['password'] ?? '');
 
-        $ip = $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        $ip = getClientIp();
         $ua = $request->getHeaderLine('User-Agent') ?: null;
 
         $this->logger->info('Login submitted', [

@@ -4,11 +4,24 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: cloud
+    restart: unless-stopped
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:80"
     volumes:
       - .:/var/www
       - ./db:/var/db
       - ./php/php.ini:/usr/local/etc/php/conf.d/uploads.ini
+        - ./Caddyfile:/etc/frankenphp/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
     env_file:
       - .env
+    tty: false
+    healthcheck:
+      test: [ "CMD", "curl", "-kf", "https://localhost/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+volumes:
+  caddy_data:
+  caddy_config:

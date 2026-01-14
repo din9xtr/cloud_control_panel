@@ -15,8 +15,6 @@ use Din9xtrCloud\Router;
 use Din9xtrCloud\Storage\Drivers\LocalStorageDriver;
 use Din9xtrCloud\Storage\Drivers\StorageDriverInterface;
 use Din9xtrCloud\Storage\UserStorageInitializer;
-use Din9xtrCloud\ViewModels\BaseViewModel;
-use Din9xtrCloud\ViewModels\LayoutConfig;
 use FastRoute\RouteCollector;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
@@ -138,6 +136,8 @@ try {
     $container->beginRequest();
     $app->dispatch();
 } catch (Throwable $e) {
+    /** @noinspection PhpUnhandledExceptionInspection */
+    $container->get(LoggerInterface::class)->error($e->getMessage(), ['exception' => $e]);
     http_response_code(500);
     header('Content-Type: text/plain; charset=utf-8');
     echo 'Internal Server Error';
