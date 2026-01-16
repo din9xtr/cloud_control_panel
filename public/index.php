@@ -11,6 +11,7 @@ use Din9xtrCloud\Controllers\StorageController;
 use Din9xtrCloud\Controllers\StorageTusController;
 use Din9xtrCloud\Middlewares\AuthMiddleware;
 use Din9xtrCloud\Middlewares\CsrfMiddleware;
+use Din9xtrCloud\Middlewares\ThrottleMiddleware;
 use Din9xtrCloud\Router;
 use Din9xtrCloud\Storage\Drivers\LocalStorageDriver;
 use Din9xtrCloud\Storage\Drivers\StorageDriverInterface;
@@ -119,7 +120,7 @@ $routes = static function (RouteCollector $r): void {
 
 // route,middlewares
 $router = new Router($routes, $container);
-//$router->middlewareFor('/', AuthMiddleware::class);
+$router->middlewareFor('/login', ThrottleMiddleware::class);
 //$router->middlewareFor('/login', AuthMiddleware::class);
 
 

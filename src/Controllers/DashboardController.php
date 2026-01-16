@@ -47,9 +47,7 @@ final readonly class DashboardController
                     'percent' => $percent,
                 ];
             }
-
-            $this->logger->info('Dashboard loaded successfully');
-
+            
         } catch (Throwable $exception) {
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
             return View::display(new DashboardViewModel(

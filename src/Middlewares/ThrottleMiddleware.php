@@ -3,63 +3,124 @@
 namespace Din9xtrCloud\Middlewares;
 
 use Nyholm\Psr7\Response;
+use PDO;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use PDO;
+use Psr\Log\LoggerInterface;
 
-final class ThrottleMiddleware implements MiddlewareInterface
+final readonly class ThrottleMiddleware implements MiddlewareInterface
 {
-    private int $maxAttempts = 5;
-    private int $lockTime = 300; // seconds
+    private const int MAX_ATTEMPTS = 10;
+    private const int LOCK_TIME = 300;
 
-    public function __construct(private readonly PDO $db)
+    public function __construct(
+        private PDO             $db,
+        private LoggerInterface $logger,
+    )
     {
     }
 
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    public function process(
+        ServerRequestInterface  $request,
+        RequestHandlerInterface $handler
+    ): ResponseInterface
     {
         $ip = getClientIp();
-        
-        $stmt = $this->db->prepare("SELECT * FROM login_throttle WHERE ip = :ip ORDER BY id DESC LIMIT 1");
-        $stmt->execute(['ip' => $ip]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
         $now = time();
-        $blockedUntil = null;
 
-        if ($row) {
-            if ($row['attempts'] >= $this->maxAttempts && ($now - $row['last_attempt']) < $this->lockTime) {
-                $blockedUntil = $row['last_attempt'] + $this->lockTime;
-            }
-        }
+        $row = $this->getLastAttempt($ip);
 
-        if ($blockedUntil && $now < $blockedUntil) {
-            return new Response(429, [], 'Too Many Requests');
-        }
+        if ($row !== null) {
+            $attempts = (int)$row['attempts'];
+            $lastAttempt = (int)$row['last_attempt'];
 
-        $response = $handler->handle($request);
+            if ($now - $lastAttempt > self::LOCK_TIME) {
+                $this->clearAttempts($ip);
+                $this->logger->info('Throttle window expired, reset attempts', [
+                    'ip' => $ip,
+                ]);
 
-        if ($request->getUri()->getPath() === '/login') {
-            $attempts = ($row['attempts'] ?? 0);
-            if ($response->getStatusCode() === 302) {
-                $this->db->prepare("
-                    INSERT INTO login_throttle (ip, attempts, last_attempt)
-                    VALUES (:ip, 0, :last_attempt)
-                ")->execute(['ip' => $ip, 'last_attempt' => $now]);
-            } else {
-                $attempts++;
-                $this->db->prepare("
-                    INSERT INTO login_throttle (ip, attempts, last_attempt)
-                    VALUES (:ip, :attempts, :last_attempt)
-                ")->execute([
+                $row = null;
+            } elseif ($attempts >= self::MAX_ATTEMPTS) {
+                $retryAfter = ($lastAttempt + self::LOCK_TIME) - $now;
+
+                $this->logger->warning('Login throttled', [
                     'ip' => $ip,
                     'attempts' => $attempts,
-                    'last_attempt' => $now
+                    'retry_after' => $retryAfter,
                 ]);
+
+                return new Response(
+                    429,
+                    ['Retry-After' => (string)max(1, $retryAfter)],
+                    'Too Many Requests'
+                );
             }
         }
-        return $response;
+
+        $this->registerAttempt($ip, $now, $row !== null);
+
+        return $handler->handle($request);
+    }
+
+    private function getLastAttempt(string $ip): ?array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT id, attempts, last_attempt
+             FROM login_throttle
+             WHERE ip = :ip
+             ORDER BY id DESC
+             LIMIT 1"
+        );
+
+        $stmt->execute(['ip' => $ip]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    private function registerAttempt(string $ip, int $now, bool $exists): void
+    {
+        if ($exists) {
+            $stmt = $this->db->prepare(
+                "UPDATE login_throttle
+                 SET attempts = attempts + 1,
+                     last_attempt = :time
+                 WHERE id = (
+                     SELECT id FROM login_throttle
+                     WHERE ip = :ip
+                     ORDER BY id DESC
+                     LIMIT 1
+                 )"
+            );
+
+            $this->logger->info('Throttle attempt incremented', [
+                'ip' => $ip,
+            ]);
+        } else {
+            $stmt = $this->db->prepare(
+                "INSERT INTO login_throttle (ip, attempts, last_attempt)
+                 VALUES (:ip, 1, :time)"
+            );
+
+            $this->logger->info('Throttle first attempt registered', [
+                'ip' => $ip,
+            ]);
+        }
+
+        $stmt->execute([
+            'ip' => $ip,
+            'time' => $now,
+        ]);
+    }
+
+    private function clearAttempts(string $ip): void
+    {
+        $stmt = $this->db->prepare(
+            "DELETE FROM login_throttle WHERE ip = :ip"
+        );
+
+        $stmt->execute(['ip' => $ip]);
     }
 }
