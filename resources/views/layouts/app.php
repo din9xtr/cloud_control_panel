@@ -21,22 +21,23 @@ $page = $viewModel->page;
 </head>
 <body>
 
-
 <?php if ($page->layoutConfig->header === 'default'): ?>
-    <header>
+    <header class="main-header">
         <nav class="navbar">
             <span class="navbar-brand">Cloud Control Panel</span>
             <a href="/" class="back-link">👈 Back</a>
 
         </nav>
     </header>
-<?php else: ?>
-    <?php
-    $headerFile = __DIR__ . '/../headers/' . $page->layoutConfig->header . '.php';
-    if (file_exists($headerFile)):
-        include $headerFile;
-        ?>
-    <?php endif; ?>
+<?php elseif ($page->layoutConfig->header !== null): ?>
+    <header class="main-header ">
+        <?php
+        $headerFile = __DIR__ . '/../headers/' . $page->layoutConfig->header . '.php';
+        if (file_exists($headerFile)):
+            include $headerFile;
+            ?>
+        <?php endif; ?>
+    </header>
 <?php endif; ?>
 
 <main class="container">
@@ -55,5 +56,6 @@ $page = $viewModel->page;
         </p>
     </footer>
 <?php endif; ?>
+<script src="/js/burger.js"></script>
 </body>
 </html>
