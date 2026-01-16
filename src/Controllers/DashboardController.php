@@ -47,7 +47,7 @@ final readonly class DashboardController
                     'percent' => $percent,
                 ];
             }
-            
+
         } catch (Throwable $exception) {
             $this->logger->error($exception->getMessage(), ['exception' => $exception]);
             return View::display(new DashboardViewModel(
@@ -62,7 +62,7 @@ final readonly class DashboardController
                         'folders' => [],
                     ],
                 ],
-                csrf: CsrfMiddleware::generateToken(),
+                csrf: CsrfMiddleware::generateToken($request),
             ));
         }
 
@@ -78,7 +78,7 @@ final readonly class DashboardController
                     'folders' => $folders,
                 ],
             ],
-            csrf: CsrfMiddleware::generateToken(),
+            csrf: CsrfMiddleware::generateToken($request),
         ));
     }
 }

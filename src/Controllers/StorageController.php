@@ -125,7 +125,7 @@ final readonly class StorageController
     public function showFolder(ServerRequestInterface $request, string $folder): string
     {
         $user = $request->getAttribute('user');
-        $csrfToken = CsrfMiddleware::generateToken();
+        $csrfToken = CsrfMiddleware::generateToken($request);
 
         $folderPath = $this->storageService->getDriver()->getUserFolderPath($user->id, $folder);
 
@@ -327,7 +327,7 @@ final readonly class StorageController
         if (!is_array($data)) {
             return new Response(400);
         }
-        
+
         $folder = $data['folder'] ?? '';
         $raw = $data['file_names'] ?? '[]';
 

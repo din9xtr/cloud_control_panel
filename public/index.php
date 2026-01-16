@@ -27,13 +27,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 // ---------------------------------------------------------------------
-// PHP runtime
-// ---------------------------------------------------------------------
-error_reporting(E_ALL);
-
-session_start();
-
-// ---------------------------------------------------------------------
 // ENV
 // ---------------------------------------------------------------------
 $storageBasePath = dirname(__DIR__) . '/' . ($_ENV['STORAGE_PATH'] ?? 'storage');

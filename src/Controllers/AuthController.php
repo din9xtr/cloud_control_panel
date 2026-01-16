@@ -13,22 +13,21 @@ use Psr\Log\LoggerInterface;
 
 final readonly class AuthController
 {
-
     public function __construct(
         private LoginService    $loginService,
-        private LoggerInterface $logger)
+        private LoggerInterface $logger
+    )
     {
     }
 
-    public function loginForm(): string
+    public function loginForm(ServerRequestInterface $request): string
     {
-        $error = $_SESSION['login_error'] ?? null;
-        unset($_SESSION['login_error']);
+        $error = $request->getQueryParams()['error'] ?? null;
 
         return View::display(new LoginViewModel(
             title: 'Login',
             error: $error,
-            csrf: CsrfMiddleware::generateToken()
+            csrf: CsrfMiddleware::generateToken($request)
         ));
     }
 
@@ -55,8 +54,6 @@ final readonly class AuthController
         );
 
         if ($authToken !== null) {
-            session_regenerate_id(true);
-
             return new Response(
                 302,
                 [
@@ -69,9 +66,10 @@ final readonly class AuthController
             );
         }
 
-        $_SESSION['login_error'] = 'Invalid credentials';
-
-        return new Response(302, ['Location' => '/login']);
+        return new Response(
+            302,
+            ['Location' => '/login?error=Invalid']
+        );
     }
 
     public function logout(ServerRequestInterface $request): Response
@@ -81,8 +79,6 @@ final readonly class AuthController
         if ($token) {
             $this->loginService->logout($token);
         }
-
-        session_destroy();
 
         return new Response(
             302,
