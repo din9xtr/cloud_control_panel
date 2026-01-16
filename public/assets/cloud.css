@@ -2350,4 +2350,9 @@ main.container {
     .folder-actions {
         margin-top: 1rem;
     }
+
+    .file-actions-section {
+        margin-top: 2rem;
+
+    }
 }
