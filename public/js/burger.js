@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!header) return;
 
+    const hasNavbarBrand = !!header.querySelector('.navbar');
+
     const burgerBtn = document.createElement('button');
     burgerBtn.className = 'burger-btn';
     burgerBtn.setAttribute('aria-label', 'Toggle menu');
@@ -11,27 +13,29 @@ document.addEventListener('DOMContentLoaded', function () {
         <span class="burger-line"></span>
         <span class="burger-line"></span>
     `;
-    const spanBrand = document.createElement('span');
-    spanBrand.className = 'navbar-brand-burger';
-    spanBrand.innerHTML = `
-                   <span class="navbar-brand">Cloud Control Panel</span>
 
-    `;
+    if (!hasNavbarBrand) {
+        const spanBrand = document.createElement('span');
+        spanBrand.className = 'navbar-brand-burger';
+        spanBrand.innerHTML = `<span class="navbar-brand">Cloud Control Panel</span>`;
+        header.appendChild(spanBrand);
+    }
+
     const mobileMenu = document.createElement('div');
     mobileMenu.className = 'mobile-menu';
 
-    const headerContent = header.innerHTML;
+    const headerClone = header.cloneNode(true);
+    headerClone.querySelectorAll('.burger-btn, .navbar-brand-burger').forEach(el => el.remove());
+
     mobileMenu.innerHTML = `
         <div class="mobile-menu-header">
             <span class="navbar-brand">Cloud Control Panel</span>
             <button class="close-btn" aria-label="Close menu">✕</button>
         </div>
         <div class="mobile-menu-body">
-            ${headerContent}
+            ${headerClone.innerHTML}
         </div>
     `;
-
-    header.appendChild(spanBrand);
 
     header.appendChild(burgerBtn);
     document.body.appendChild(mobileMenu);

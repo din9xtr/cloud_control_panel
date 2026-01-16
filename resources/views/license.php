@@ -9,35 +9,6 @@
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
     }
 
-    body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-        color: #2d3748;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 1rem;
-    }
-
-    header {
-        background: rgba(255, 255, 255, 0.98);
-        color: #4a5568;
-        padding: 1rem 2rem;
-        width: 100%;
-        text-align: center;
-        font-weight: 700;
-        font-size: 1.5rem;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        position: fixed;
-        top: 0;
-        z-index: 1000;
-        border-radius: 0 0 20px 20px;
-        margin: 0 auto;
-    }
-
     .navbar {
         display: flex;
         justify-content: space-between;
@@ -292,17 +263,6 @@
     }
 
     @media (prefers-color-scheme: dark) {
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #f1f5f9;
-        }
-
-        header {
-            background: rgba(30, 41, 59, 0.95);
-            color: #cbd5e1;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
 
         .license-container {
             background: rgba(30, 41, 59, 0.95);
@@ -394,8 +354,6 @@
         }
     }
 </style>
-</head>
-<body>
 <main>
     <div class="license-container">
         <div class="license-header">
