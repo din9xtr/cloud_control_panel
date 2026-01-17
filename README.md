@@ -2,10 +2,27 @@
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.5%2B-blue.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
+[![Packagist Version](https://img.shields.io/packagist/v/din9xtr/cloud-control-panel.svg)](https://packagist.org/packages/din9xtr/cloud-control-panel)
 
 A lightweight, self-hosted cloud management panel designed for simplicity and performance. Built with modern PHP and
 containerized for easy deployment, it provides an intuitive interface for managing your personal cloud storage with
 minimal resource overhead.
+
+## 📦 Installation
+
+### Via Composer
+
+```bash
+composer create-project din9xtr/cloud-control-panel my-cloud
+cd my-cloud
+```
+
+### Via Git
+
+```bash
+git clone https://github.com/din9xtr/cloud_control_panel.git
+cd cloud_control_panel
+```
 
 ## ✨ Features
 
