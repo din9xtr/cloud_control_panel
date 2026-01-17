@@ -1,5 +1,8 @@
 # Cloud control panel
 
+[![PHP Version](https://img.shields.io/badge/PHP-8.5%2B-blue.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
+
 A lightweight, self-hosted cloud management panel designed for simplicity and performance. Built with modern PHP and
 containerized for easy deployment, it provides an intuitive interface for managing your personal cloud storage with
 minimal resource overhead.
@@ -24,7 +27,6 @@ Docker and Docker Compose, Make utility
 Configure Environment Variables
 
 ```bash
-
 cp .env.example .env
 nano .env
 ```
@@ -32,10 +34,10 @@ nano .env
 Build and Deploy
 
 ```bash
-
 make build
 make install 
 make up
+make key
 make migrate 
 ```
 
@@ -46,7 +48,6 @@ Web Interface: http://localhost:8001 (or any configured port)
 ### ⚙️ Additional Commands
 
 ```bash
-
 make bash 
 # in docker environment 
 composer analyse
@@ -61,6 +62,10 @@ composer test
 
 3. Set up regular backups
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is open-source and available under the **[MIT License](LICENSE.txt)**.
+
+Copyright © 2026 Din9xtr
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

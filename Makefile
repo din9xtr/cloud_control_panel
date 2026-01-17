@@ -30,7 +30,7 @@ key:
 	if grep -q '^APP_KEY=' .env; then \
 		sed -i "s/^APP_KEY=.*/APP_KEY=$$KEY/" .env; \
 	else \
-		echo "APP_KEY=$$KEY" >> .env; \
+		printf "\nAPP_KEY=$$KEY\n" >> .env; \
 	fi; \
 	echo "APP_KEY set to $$KEY"; \
 	echo "Restarting app container to apply new key..."; \

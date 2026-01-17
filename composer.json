@@ -1,4 +1,27 @@
 {
+  "name": "din9xtr/cloud-control-panel",
+  "description": "A lightweight, self-hosted cloud management panel for personal storage",
+  "type": "project",
+  "license": "MIT",
+  "keywords": [
+    "cloud",
+    "storage",
+    "file-manager",
+    "self-hosted",
+    "docker",
+    "php"
+  ],
+  "homepage": "https://github.com/din9xtr/cloud_control_panel",
+  "support": {
+    "issues": "https://github.com/din9xtr/cloud_control_panel/issues",
+    "source": "https://github.com/din9xtr/cloud_control_panel"
+  },
+  "authors": [
+    {
+      "name": "Din9xtr",
+      "homepage": "https://github.com/din9xtr"
+    }
+  ],
   "require": {
     "php": "^8.5",
     "nikic/fast-route": "^1.3",
