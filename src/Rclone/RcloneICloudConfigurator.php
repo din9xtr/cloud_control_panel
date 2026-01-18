@@ -18,10 +18,7 @@ final readonly class RcloneICloudConfigurator
      * @throws ClientExceptionInterface
      * @throws JsonException
      */
-    public function createRemote(
-        string $remote,
-        string $appleId
-    ): void
+    public function createRemote(string $remote, string $appleId): void
     {
         $this->rclone->call('config/create', [
             'name' => $remote,
@@ -29,20 +26,15 @@ final readonly class RcloneICloudConfigurator
             'parameters' => [
                 'apple_id' => $appleId,
             ],
-            'opt' => [
-                'nonInteractive' => true,
-            ],
         ]);
+
     }
 
     /**
      * @throws ClientExceptionInterface
      * @throws JsonException
      */
-    public function setPassword(
-        string $remote,
-        string $password
-    ): void
+    public function setPassword(string $remote, string $password): void
     {
         $this->rclone->call('config/password', [
             'name' => $remote,
@@ -56,10 +48,7 @@ final readonly class RcloneICloudConfigurator
      * @throws ClientExceptionInterface
      * @throws JsonException
      */
-    public function submit2fa(
-        string $remote,
-        string $code
-    ): void
+    public function submit2fa(string $remote, string $code): array
     {
         $this->rclone->call('config/update', [
             'name' => $remote,
@@ -67,6 +56,12 @@ final readonly class RcloneICloudConfigurator
                 'config_2fa' => $code,
             ],
         ]);
+
+        $config = $this->getConfig($remote);
+        return [
+            'trust_token' => $config['trust_token'] ?? null,
+            'cookies' => $config['cookies'] ?? null,
+        ];
     }
 
     /**
@@ -79,5 +74,4 @@ final readonly class RcloneICloudConfigurator
             'name' => $remote
         ]);
     }
-
 }

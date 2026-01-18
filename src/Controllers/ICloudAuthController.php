@@ -108,13 +108,15 @@ final readonly class ICloudAuthController
         $remote = 'icloud_' . $user->id;
 
         try {
-            $this->configurator->submit2fa($remote, $code);
+            $res = $this->configurator->submit2fa($remote, $code);
 
             $account = $this->repository->findByUserId($user->id);
             if ($account) {
                 $this->repository->update($account, [
                     'status' => 'connected',
-                    'connected_at' => time()
+                    'connected_at' => time(),
+                    'trust_token' => $res['trust_token'],
+                    'cookies' => $res['cookies'],
                 ]);
             }
 
