@@ -2,6 +2,9 @@
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+use Din9xtrCloud\Controllers\ICloudAuthController;
+use Din9xtrCloud\Rclone\RcloneClient;
+use Http\Client\Curl\Client;
 use Din9xtrCloud\App;
 use Din9xtrCloud\Container\Container;
 use Din9xtrCloud\Controllers\AuthController;
@@ -23,7 +26,11 @@ use Monolog\Processor\PsrLogMessageProcessor;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Monolog\Level;
 use Nyholm\Psr7Server\ServerRequestCreator;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 
 // ---------------------------------------------------------------------
@@ -77,6 +84,30 @@ $container->request(
     )->fromGlobals()
 );
 
+$container->singleton(ClientInterface::class, fn() => new Client());
+
+$container->singleton(
+    ResponseFactoryInterface::class,
+    fn(Container $c) => $c->get(Psr17Factory::class)
+);
+$container->singleton(RequestFactoryInterface::class,
+    fn(Container $c) => $c->get(Psr17Factory::class)
+);
+
+$container->singleton(StreamFactoryInterface::class,
+    fn(Container $c) => $c->get(Psr17Factory::class)
+);
+//$container->factory(ResponseInterface);
+$container->singleton(RcloneClient::class, function (Container $c) {
+    return new RcloneClient(
+        http: $c->get(ClientInterface::class),
+        requests: $c->get(RequestFactoryInterface::class),
+        streams: $c->get(StreamFactoryInterface::class),
+        baseUrl: $_ENV['RCLONE_URL'] ?? 'http://rclone:5572',
+        user: $_ENV['RCLONE_USER'],
+        pass: $_ENV['RCLONE_PASS'],
+    );
+});
 // ---------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------
@@ -108,6 +139,10 @@ $routes = static function (RouteCollector $r): void {
 
     $r->get('/storage/files/download/multiple', [StorageController::class, 'downloadMultiple']);
     $r->post('/storage/files/delete/multiple', [StorageController::class, 'deleteMultiple']);
+
+    $r->get('/icloud/connect', [ICloudAuthController::class, 'connectForm']);
+    $r->post('/icloud/connect', [ICloudAuthController::class, 'submitCredentials']);
+    $r->post('/icloud/2fa', [ICloudAuthController::class, 'submit2fa']);
 };
 
 
