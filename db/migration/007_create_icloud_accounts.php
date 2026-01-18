@@ -9,12 +9,17 @@ return function (PDO $db): void {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             remote_name TEXT NOT NULL UNIQUE,
+
             apple_id TEXT NOT NULL,
-            trust_token TEXT,
-            cookies TEXT,
-            status TEXT NOT NULL DEFAULT 'pending',
-            connected_at INTEGER,
+            password TEXT NOT NULL,
+
+            trust_token TEXT NOT NULL,
+            cookies TEXT NOT NULL,
+
+            status TEXT NOT NULL DEFAULT 'connected',
+            connected_at INTEGER NOT NULL,
             created_at INTEGER NOT NULL,
+
             FOREIGN KEY(user_id) REFERENCES users(id)
         );
     ");

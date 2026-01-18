@@ -141,8 +141,7 @@ $routes = static function (RouteCollector $r): void {
     $r->post('/storage/files/delete/multiple', [StorageController::class, 'deleteMultiple']);
 
     $r->get('/icloud/connect', [ICloudAuthController::class, 'connectForm']);
-    $r->post('/icloud/connect', [ICloudAuthController::class, 'submitCredentials']);
-    $r->post('/icloud/2fa', [ICloudAuthController::class, 'submit2fa']);
+    $r->post('/icloud/connect', [ICloudAuthController::class, 'submit']);
 };
 
 

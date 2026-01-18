@@ -34,7 +34,8 @@
     "ext-pdo": "*",
     "ext-fileinfo": "*",
     "ext-zip": "*",
-    "php-http/curl-client": "^2.4"
+    "php-http/curl-client": "^2.4",
+    "ext-sodium": "*"
   },
   "require-dev": {
     "phpstan/phpstan": "^2.1",

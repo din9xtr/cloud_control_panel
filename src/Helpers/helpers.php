@@ -1,5 +1,7 @@
 <?php
 
+use Random\RandomException;
+
 if (!function_exists('formatBytes')) {
 
     function formatBytes(int $bytes): string
@@ -88,9 +90,54 @@ if (!function_exists('validateIp')) {
         }
 
         $flags = FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6;
-        
+
         return filter_var($ip, FILTER_VALIDATE_IP, $flags)
             ? $ip
             : null;
+    }
+}
+
+if (!function_exists('encryptString')) {
+    /**
+     * XSalsa20 + Poly1305
+     * @throws Throwable
+     */
+    function encryptString(string $plaintext): string
+    {
+        $key = hex2bin($_ENV['APP_KEY']); // 32 байта
+        if (strlen($key) !== SODIUM_CRYPTO_SECRETBOX_KEYBYTES) {
+            throw new RuntimeException('APP_KEY must be 32 bytes');
+        }
+
+        $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+
+        $ciphertext = sodium_crypto_secretbox($plaintext, $nonce, $key);
+
+        return base64_encode($nonce . $ciphertext);
+    }
+}
+
+if (!function_exists('decryptString')) {
+    /**
+     * @throws Throwable
+     */
+    function decryptString(string $encrypted): string
+    {
+        $key = hex2bin($_ENV['APP_KEY']);
+        if (strlen($key) !== SODIUM_CRYPTO_SECRETBOX_KEYBYTES) {
+            throw new RuntimeException('APP_KEY must be 32 bytes');
+        }
+
+        $data = base64_decode($encrypted, true);
+        $nonce = substr($data, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+        $ciphertext = substr($data, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+
+        $plaintext = sodium_crypto_secretbox_open($ciphertext, $nonce, $key);
+
+        if ($plaintext === false) {
+            throw new RuntimeException('Failed to decrypt data');
+        }
+
+        return $plaintext;
     }
 }

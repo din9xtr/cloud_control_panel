@@ -5,7 +5,6 @@ namespace Din9xtrCloud\Controllers;
 
 use Din9xtrCloud\Middlewares\CsrfMiddleware;
 use Din9xtrCloud\Rclone\RcloneClient;
-use Din9xtrCloud\Rclone\RcloneICloudConfigurator;
 use Din9xtrCloud\Repositories\IcloudAccountRepository;
 use Din9xtrCloud\View;
 use Din9xtrCloud\ViewModels\Icloud\ICloudLoginViewModel;
@@ -18,7 +17,6 @@ use Throwable;
 final readonly class ICloudAuthController
 {
     public function __construct(
-        private RcloneICloudConfigurator $configurator,
         private ResponseFactoryInterface $responseFactory,
         private LoggerInterface          $logger,
         private IcloudAccountRepository  $repository,
@@ -33,122 +31,107 @@ final readonly class ICloudAuthController
             session_start();
         }
 
-        $query = $request->getQueryParams();
-        $show2fa = (bool)($query['show2fa'] ?? false);
-        $appleId = (string)($query['apple_id'] ?? '');
-
-        $error = '';
-        if (isset($_SESSION['icloud_error'])) {
-            $error = (string)$_SESSION['icloud_error'];
-            unset($_SESSION['icloud_error']);
-        }
-
-        $title = $show2fa ? 'iCloud 2FA Verification' : 'iCloud Login';
+        $error = $_SESSION['icloud_error'] ?? '';
+        unset($_SESSION['icloud_error']);
 
         return View::display(
             new ICloudLoginViewModel(
-                title: $title,
+                title: 'Connect iCloud',
                 csrf: CsrfMiddleware::generateToken($request),
-                show2fa: $show2fa,
-                error: $error,
-                appleId: $appleId
+                error: $error
             )
         );
     }
 
-    public function submitCredentials(ServerRequestInterface $request): ResponseInterface
+    public function submit(ServerRequestInterface $request): ResponseInterface
     {
         $data = (array)$request->getParsedBody();
         $user = $request->getAttribute('user');
 
-        $appleId = (string)($data['apple_id'] ?? '');
-        $password = (string)($data['password'] ?? '');
-        $remote = 'icloud_' . $user->id;
+        $appleId = trim((string)($data['apple_id'] ?? ''));
+        $password = trim((string)($data['password'] ?? ''));
+        $cookies = trim((string)($data['cookies'] ?? ''));
+        $trustToken = trim((string)($data['trust_token'] ?? ''));
 
-        try {
-            $this->configurator->createRemote($remote, $appleId);
-            $this->configurator->setPassword($remote, $password);
-
-            $config = $this->configurator->getConfig($remote);
-            $trustToken = $config['trust_token'] ?? null;
-            $cookies = $config['cookies'] ?? null;
-
-            $this->repository->create(
-                $user->id,
-                $remote,
-                $appleId,
-                $trustToken,
-                $cookies
-            );
-
-            return $this->responseFactory
-                ->createResponse(302)
-                ->withHeader('Location', '/icloud/connect?show2fa=1&apple_id=' . urlencode($appleId));
-
-        } catch (Throwable $e) {
-            $this->logger->error($e->getMessage(), ['exception' => $e]);
-
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['icloud_error'] = $e->getMessage();
-
-            return $this->responseFactory
-                ->createResponse(302)
-                ->withHeader('Location', '/icloud/connect');
+        if ($appleId === '' || $password === '' || $cookies === '' || $trustToken === '') {
+            return $this->fail('All fields are required');
         }
-    }
 
-
-    public function submit2fa(ServerRequestInterface $request): ResponseInterface
-    {
-        $data = (array)$request->getParsedBody();
-        $user = $request->getAttribute('user');
-
-        $code = (string)($data['code'] ?? '');
-        $appleId = (string)($data['apple_id'] ?? '');
         $remote = 'icloud_' . $user->id;
 
         try {
-            $res = $this->configurator->submit2fa($remote, $code);
+            $encryptedAppleId = encryptString($appleId);
+            $encryptedPassword = encryptString($password);
 
-            $account = $this->repository->findByUserId($user->id);
-            if ($account) {
-                $this->repository->update($account, [
-                    'status' => 'connected',
-                    'connected_at' => time(),
-                    'trust_token' => $res['trust_token'],
-                    'cookies' => $res['cookies'],
+            try {
+                $this->rclone->call('config/create', [
+                    'name' => $remote,
+                    'type' => 'iclouddrive',
+                    'parameters' => [
+                        'apple_id' => $appleId,
+                        'password' => $password,
+                        'cookies' => $cookies,
+                        'trust_token' => $trustToken,
+                    ],
+                    'nonInteractive' => true,
+                ]);
+            } catch (Throwable $e) {
+                $this->logger->warning('iCloud remote exists, updating', [
+                    'remote' => $remote,
+                    'exception' => $e,
+                ]);
+
+                $this->rclone->call('config/update', [
+                    'name' => $remote,
+                    'parameters' => [
+                        'apple_id' => $appleId,
+                        'password' => $password,
+                        'cookies' => $cookies,
+                        'trust_token' => $trustToken,
+                    ],
                 ]);
             }
 
-            $contents = $this->rclone->call('operations/list', [
+            // health-check
+            $list = $this->rclone->call('operations/list', [
                 'fs' => $remote . ':',
                 'remote' => '',
-                'opt' => [],
-                'recurse' => true,
-                'dirsOnly' => false,
-                'filesOnly' => false,
-                'metadata' => true,
+                'maxDepth' => 1,
             ]);
 
-            $this->logger->info('iCloud contents', ['user' => $user->id, '$contents' => $contents]);
+            $this->logger->info('icloud list', $list);
+
+            $this->repository->createOrUpdate(
+                userId: $user->id,
+                remoteName: $remote,
+                appleId: $encryptedAppleId,
+                password: $encryptedPassword,
+                trustToken: $trustToken,
+                cookies: $cookies,
+            );
 
             return $this->responseFactory
                 ->createResponse(302)
                 ->withHeader('Location', '/storage');
 
         } catch (Throwable $e) {
-            $this->logger->error($e->getMessage(), ['exception' => $e]);
+            $this->logger->error('iCloud connect failed', [
+                'remote' => $remote,
+                'exception' => $e,
+            ]);
 
-            if (session_status() === PHP_SESSION_NONE) session_start();
-            $_SESSION['icloud_error'] = $e->getMessage();
-
-            return $this->responseFactory
-                ->createResponse(302)
-                ->withHeader('Location', '/icloud/connect?' . http_build_query([
-                        'show2fa' => 1,
-                        'apple_id' => $appleId
-                    ]));
+            return $this->fail($e->getMessage());
         }
     }
 
+
+    private function fail(string $message): ResponseInterface
+    {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $_SESSION['icloud_error'] = $message;
+
+        return $this->responseFactory
+            ->createResponse(302)
+            ->withHeader('Location', '/icloud/connect');
+    }
 }
